@@ -500,7 +500,7 @@ function showResult(videoId) {
   embed.src = `https://www.youtube.com/embed/${videoId}`;
   resultEl.classList.add('show');
   // Collapse the paste UI into a minimal confirmation state.
-  statusAbove.textContent = 'Ad detected.';
+  statusAbove.textContent = 'Saved it.';
   pasteWrap.classList.add('success');
 }
 
@@ -524,6 +524,15 @@ function getValuesFromPlist(plistData, keys) {
   return results;
 }
 
+// Look up the first non-empty value across a list of possible field names.
+function pickFirst(obj, keys) {
+  for (const k of keys) {
+    const v = obj && obj[k];
+    if (typeof v === 'string' && v.trim()) return v.trim();
+  }
+  return null;
+}
+
 function processPasted(pastedText) {
   if (!pastedText || !pastedText.trim()) {
     clearResult();
@@ -531,37 +540,45 @@ function processPasted(pastedText) {
     return;
   }
 
-  // Path 1: Newer JSON format with addebug_videoId
+  let videoId = null;
+
+  // Path 1: JSON format (modern + legacy). Walks a priority list of known
+  // fields so the tool keeps working as YouTube renames things.
   try {
     const jsonData = JSON.parse(pastedText);
-    if (jsonData && jsonData.addebug_videoId) {
-      setStatus('');
-      showResult(jsonData.addebug_videoId);
-      return;
-    } else {
-    //clearResult();
-    //setStatus('That looks like debug info, but not from an ad', 'err');
-    setStatus('Not an ad, but showing the video anyway', 'err');
-    showResult(jsonData.debug_videoId);
-    return;
+    if (jsonData && typeof jsonData === 'object') {
+      // Legacy ad marker — most reliable when present.
+      videoId = pickFirst(jsonData, ['addebug_videoId']);
+
+      // Modern formats: docid and debug_videoId are the current ad video ID
+      // carriers. They typically match each other.
+      if (!videoId) {
+        videoId = pickFirst(jsonData, ['docid', 'debug_videoId']);
+      }
     }
   } catch (e) {
-    // Not JSON — fall through to plist parser
+    // Not JSON — fall through to plist parser.
   }
 
-  // Path 2: Older plist format with docid / videoID
-  const values = getValuesFromPlist(pastedText, ['docid', 'videoID']);
-  if (!values || !values.docid || !values.videoID) {
-    clearResult();
-    setStatus('That doesn\u2019t look like the right info. Try copying again.', 'err');
-    return;
+  // Path 2: Plist format (older clients). docid != videoID is the classic
+  // ad signature; otherwise fall back to whichever ID is present.
+  if (!videoId) {
+    const values = getValuesFromPlist(pastedText, ['docid', 'videoID', 'debug_videoId']);
+    if (values) {
+      if (values.docid && values.videoID && values.docid !== values.videoID) {
+        videoId = values.docid;
+      } else {
+        videoId = values.docid || values.debug_videoId || values.videoID || null;
+      }
+    }
   }
-  if (values.docid !== values.videoID) {
+
+  if (videoId) {
     setStatus('');
-    showResult(values.docid);
+    showResult(videoId);
   } else {
     clearResult();
-    setStatus('That looks like debug info, but not from an ad.', 'err');
+    setStatus('That doesn\u2019t look like the right info. Try copying again.', 'err');
   }
 }
 
