@@ -193,8 +193,6 @@
 
   /* Paste input */
   .paste-wrap { margin-top: 0.75rem; }
-  .paste-wrap.success textarea#paste-field { display: none; }
-  .paste-wrap.success .status { display: none; }
   textarea#paste-field {
     width: 100%;
     background: var(--input-bg);
@@ -214,16 +212,8 @@
   }
   textarea#paste-field::placeholder { color: var(--dim); }
 
-  /* Status line above the field (used for the success "Ad detected" state) */
-  .status-above {
-    font-size: 0.75rem;
-    color: var(--ok);
-    font-weight: 500;
-    min-height: 1em;
-    margin-bottom: 0.4rem;
-    display: none;
-  }
-  .paste-wrap.success .status-above { display: block; }
+  /* When a result is shown, the How-to-use section steps back entirely. */
+  #how-section.hidden { display: none; }
 
   /* Status line below the field (error + hint states) */
   .status {
@@ -238,6 +228,15 @@
   /* Result (link + embed) */
   .result { margin-top: 1.25rem; display: none; }
   .result.show { display: block; }
+
+  /* Confirmation badge in the Ad link section header */
+  .saved-badge {
+    color: var(--ok);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
 
   .yt-link-hero {
     display: block;
@@ -362,7 +361,7 @@
     </div>
   </header>
 
-  <div class="section">
+  <div class="section" id="how-section">
     <div class="section-head">
       <span>How to use</span>
     </div>
@@ -373,7 +372,6 @@
         <li>Paste below</li>
       </ol>
       <div class="paste-wrap" id="paste-wrap">
-        <div class="status-above" id="status-above"></div>
         <textarea id="paste-field" placeholder="Paste here" rows="2" autocomplete="off" spellcheck="false"></textarea>
         <div class="status" id="status"></div>
       </div>
@@ -382,7 +380,10 @@
 
   <div class="result" id="result">
     <div class="section">
-      <div class="section-head">Ad link</div>
+      <div class="section-head">
+        <span>Ad link</span>
+        <span class="saved-badge">Saved it</span>
+      </div>
       <div class="section-body">
         <a class="yt-link-hero" id="yt-link" href="" target="_blank" rel="noopener">—</a>
         <div class="link-sub">Opens on YouTube in a new tab.</div>
@@ -469,8 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 const pasteField = document.getElementById('paste-field');
 const pasteWrap  = document.getElementById('paste-wrap');
+const howSection = document.getElementById('how-section');
 const statusEl   = document.getElementById('status');
-const statusAbove = document.getElementById('status-above');
 const resultEl   = document.getElementById('result');
 const ytLink     = document.getElementById('yt-link');
 const embed      = document.getElementById('embed');
@@ -486,8 +487,7 @@ function clearResult() {
   ytLink.textContent = '—';
   ytLink.href = '';
   embed.src = '';
-  pasteWrap.classList.remove('success');
-  statusAbove.textContent = '';
+  howSection.classList.remove('hidden');
 }
 
 function showResult(videoId) {
@@ -499,9 +499,9 @@ function showResult(videoId) {
   // Error 153 (player config error) on non-allowlisted domains.
   embed.src = `https://www.youtube.com/embed/${videoId}`;
   resultEl.classList.add('show');
-  // Collapse the paste UI into a minimal confirmation state.
-  statusAbove.textContent = 'Saved it.';
-  pasteWrap.classList.add('success');
+  // Step out of paste mode entirely — the How-to-use section retreats and
+  // the result section becomes the focus, with "Saved it" as confirmation.
+  howSection.classList.add('hidden');
 }
 
 // Parse plist-style "key = value;" pairs (the format older YT Debug Info uses).
