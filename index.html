@@ -540,7 +540,7 @@ function processPasted(pastedText) {
       return;
     }
     clearResult();
-    setStatus('That looks like debug info, but not from an ad.', 'err');
+    setStatus('That looks like debug info, but not from an ad', 'err');
     return;
   } catch (e) {
     // Not JSON — fall through to plist parser
