@@ -539,8 +539,10 @@ function processPasted(pastedText) {
       showResult(jsonData.addebug_videoId);
       return;
     }
-    clearResult();
-    setStatus('That looks like debug info, but not from an ad', 'err');
+    //clearResult();
+    //setStatus('That looks like debug info, but not from an ad', 'err');
+    setStatus('Not an ad, but showing the video anyway', 'err');
+    showResult(jsonData.debug_videoId);
     return;
   } catch (e) {
     // Not JSON — fall through to plist parser
