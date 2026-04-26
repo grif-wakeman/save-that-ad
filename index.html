@@ -229,15 +229,6 @@
   .result { margin-top: 1.25rem; display: none; }
   .result.show { display: block; }
 
-  /* Confirmation badge in the Ad link section header */
-  .saved-badge {
-    color: var(--ok);
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 500;
-  }
-
   .yt-link-hero {
     display: block;
     color: var(--accent);
@@ -382,7 +373,6 @@
     <div class="section">
       <div class="section-head">
         <span>Ad link</span>
-        <span class="saved-badge">Saved it</span>
       </div>
       <div class="section-body">
         <a class="yt-link-hero" id="yt-link" href="" target="_blank" rel="noopener">—</a>
@@ -500,7 +490,7 @@ function showResult(videoId) {
   embed.src = `https://www.youtube.com/embed/${videoId}`;
   resultEl.classList.add('show');
   // Step out of paste mode entirely — the How-to-use section retreats and
-  // the result section becomes the focus, with "Saved it" as confirmation.
+  // the result section becomes the focus.
   howSection.classList.add('hidden');
 }
 
